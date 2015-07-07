@@ -5,18 +5,32 @@ boolean displayEdges = false;
 // Display image
 void setup() {
   img = loadImage("pokemon.jpg");
-//  img.resize(img.width/2, img.height/2);
+  img.resize(img.width/2, img.height/2);
 
   size(img.width, img.height);
 
-  float[][] grayscale = new float[img.width][img.height];
-  // can parallelize
-  for (int x = 0; x < img.width; x++) {
-    for (int y = 0; y < img.height; y++) {
-      color c = img.get(x, y);
-      grayscale[x][y] = (red(c) + green(c) + blue(c))/3.0;
-    }
+  float[][] red = gradient(img, RED),
+            green = gradient(img, GREEN),
+            blue = gradient(img, BLUE);
+
+  edges = fromChannels(red, green, blue);
+//  edges = grayscale(dist);
+}
+
+void draw() {
+  background(img);
+  if (displayEdges) {
+    image(edges, 1, 1);
   }
+}
+
+void keyPressed() {
+  displayEdges = !displayEdges;
+}
+
+float[][] gradient(PImage img, int channel) {
+  
+  float[][] grayscale = getChannel(img, channel);
 
   float[][] dx = new float[img.width-2][img.height-2];
   float[][] kernelX = { 
@@ -65,19 +79,8 @@ void setup() {
       dist[x][y] = mag(dx[x][y], dy[x][y]);
     }
   }
-
-  edges = grayscale(dist);
-}
-
-void draw() {
-  background(img);
-  if (displayEdges) {
-    image(edges, 1, 1);
-  }
-}
-
-void keyPressed() {
-  displayEdges = !displayEdges;
+  
+  return dist;
 }
 
 float kernel(float[][] image, int x, int y, float[][] kernel) {
@@ -90,6 +93,32 @@ float kernel(float[][] image, int x, int y, float[][] kernel) {
   return dotProduct;
 }
 
+final int RED = 0, GREEN = 1, BLUE = 2, GRAYSCALE = 3;
+float[][] getChannel(PImage img, int channel) {
+  float[][] px = new float[img.width][img.height];
+  // can parallelize
+  for (int x = 0; x < img.width; x++) {
+    for (int y = 0; y < img.height; y++) {
+      color c = img.get(x, y);
+      switch (channel) {
+        case RED:
+          px[x][y] = red(c);
+          break;
+        case GREEN:
+          px[x][y] = green(c);
+          break;
+        case BLUE:
+          px[x][y] = blue(c);
+          break;
+        case GRAYSCALE:
+          px[x][y] = (red(c) + green(c) + blue(c))/3.0;
+          break;
+      }
+    }
+  }
+  return px;
+}
+
 PImage grayscale(float[][] colors) {
   PImage yolo = createImage(colors.length, colors[0].length, RGB);
   for (int x = 0; x < yolo.width; x++) {
@@ -100,3 +129,12 @@ PImage grayscale(float[][] colors) {
   return yolo;
 }
 
+PImage fromChannels(float[][] red, float[][] green, float[][] blue) {
+  PImage yolo = createImage(red.length, red[0].length, RGB);
+  for (int x = 0; x < yolo.width; x++) {
+    for (int y = 0; y < yolo.height; y++) {
+      yolo.set(x, y, color(red[x][y], green[x][y], blue[x][y]));
+    }
+  }
+  return yolo;
+}
