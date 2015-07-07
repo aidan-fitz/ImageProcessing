@@ -4,8 +4,9 @@ boolean displayEdges = false;
 
 // Display image
 void setup() {
-  img = loadImage("pokemon.jpg");
-  img.resize(img.width/2, img.height/2);
+  img = loadImage("wave.jpg");
+//  img = loadImage("pokemon.jpg");
+//  img.resize(img.width/2, img.height/2);
 
   size(img.width, img.height);
 
