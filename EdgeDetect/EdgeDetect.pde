@@ -22,6 +22,9 @@ void setup() {
 void draw() {
   if (runCamera) {
     // use webcam
+    if (cam.available()) {
+      cam.read();
+    }
     background(cam);
     if (displayEdges) {
       image(edges(cam), 1, 1);
