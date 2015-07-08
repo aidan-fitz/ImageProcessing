@@ -1,36 +1,64 @@
+import processing.video.*;
+Capture cam;
+
 PImage img, edges;
 
-boolean displayEdges = false;
+boolean displayEdges = false, runCamera = false;
 
-// Display image
+int fps = 30;
+
+// Create processed image
 void setup() {
-  img = loadImage("wave.jpg");
-//  img = loadImage("pokemon.jpg");
-//  img.resize(img.width/2, img.height/2);
+  img = loadImage("pokemon.jpg");
+  img.resize(640, 480);//img.width/2, img.height/2);
 
   size(img.width, img.height);
+  edges = edges(img);
 
-  float[][] red = gradient(img, RED),
-            green = gradient(img, GREEN),
-            blue = gradient(img, BLUE);
-
-  edges = fromChannels(red, green, blue);
-//  edges = grayscale(dist);
+  cam = new Capture(this, img.width, img.height, fps);
+  frameRate(fps);
 }
 
 void draw() {
-  background(img);
-  if (displayEdges) {
-    image(edges, 1, 1);
+  if (runCamera) {
+    // use webcam
+    background(cam);
+    if (displayEdges) {
+      image(edges(cam), 1, 1);
+    }
+  } else {
+    //use default image
+    background(img);
+    if (displayEdges) {
+      image(edges, 1, 1);
+    }
   }
 }
 
 void keyPressed() {
-  displayEdges = !displayEdges;
+  if (key == ' ') {
+    displayEdges = !displayEdges;
+  }
+  if (key == 'w' || key == 'W') {
+    runCamera = !runCamera;
+    if (runCamera) {
+      cam.start();
+    } else {
+      cam.stop();
+    }
+  }
+}
+
+PImage edges(PImage img) {
+  float[][] red = gradient(img, RED), 
+  green = gradient(img, GREEN), 
+  blue = gradient(img, BLUE);
+
+  return fromChannels(red, green, blue);
 }
 
 float[][] gradient(PImage img, int channel) {
-  
+
   float[][] grayscale = getChannel(img, channel);
 
   float[][] dx = new float[img.width-2][img.height-2];
@@ -80,7 +108,7 @@ float[][] gradient(PImage img, int channel) {
       dist[x][y] = mag(dx[x][y], dy[x][y]);
     }
   }
-  
+
   return dist;
 }
 
@@ -102,18 +130,18 @@ float[][] getChannel(PImage img, int channel) {
     for (int y = 0; y < img.height; y++) {
       color c = img.get(x, y);
       switch (channel) {
-        case RED:
-          px[x][y] = red(c);
-          break;
-        case GREEN:
-          px[x][y] = green(c);
-          break;
-        case BLUE:
-          px[x][y] = blue(c);
-          break;
-        case GRAYSCALE:
-          px[x][y] = (red(c) + green(c) + blue(c))/3.0;
-          break;
+      case RED:
+        px[x][y] = red(c);
+        break;
+      case GREEN:
+        px[x][y] = green(c);
+        break;
+      case BLUE:
+        px[x][y] = blue(c);
+        break;
+      case GRAYSCALE:
+        px[x][y] = (red(c) + green(c) + blue(c))/3.0;
+        break;
       }
     }
   }
@@ -139,3 +167,4 @@ PImage fromChannels(float[][] red, float[][] green, float[][] blue) {
   }
   return yolo;
 }
+
